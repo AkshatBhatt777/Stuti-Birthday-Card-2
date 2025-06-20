@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Happy Birthday Stuti!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet"/>
+  <style>
+    body { margin:0; background: linear-gradient(135deg,#ffe0f0,#ffd6ff); font-family:'Patrick Hand',cursive; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; position:relative; }
+    @keyframes confetti {0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(800px) rotate(360deg);opacity:0;}}
+    .confetti {position:absolute;width:10px;height:20px;top:-20px;animation:confetti 5s linear infinite;}
+    .card {background:rgba(255,255,255,0.9);padding:40px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center;transform:scale(0);animation:popin 1s forwards;z-index:1;}
+    @keyframes popin {to{transform:scale(1);}}
+    .cake {position:relative;margin:20px auto;width:220px;height:140px;}
+    .cake .base {width:100%;height:100px;background:linear-gradient(to right,#ff99c3,#ff6fa3);border-radius:10px;box-shadow:inset 0 -5px 10px rgba(0,0,0,0.1);}
+    .candle {width:14px;height:50px;background:#fff;margin:0 8px;position:relative;display:inline-block;}
+    .flame {position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:14px;height:18px;background:orange;border-radius:0 0 50% 50%;box-shadow:0 0 8px rgba(255,165,0,0.8);animation:flicker 0.4s infinite alternate;}
+    @keyframes flicker {from{transform:translateX(-50%) scale(0.9);opacity:0.8;}to{transform:translateX(-50%) scale(1.1);opacity:1;}}
+    .message {font-size:22px;margin-top:20px;opacity:0;transition:opacity 1.2s;}
+    .message.show {opacity:1;}
+  </style>
+</head>
+<body>
+  <audio id="bgMusic" src="https://actions.google.com/sounds/v1/music/celebration.ogg" preload="auto"></audio>
+  <audio id="popSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+  <audio id="blowSound" src="https://actions.google.com/sounds/v1/human_voices/blow_out_candle.ogg" preload="auto"></audio>
+
+  <div class="card">
+    <h1>🎉 Happy 13th Birthday, Stuti! 🎉</h1>
+    <div class="cake">
+      <div class="base"></div>
+      <div style="position:absolute; top:-50px; left:50%; transform:translateX(-50%); display:flex;">
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+      </div>
+    </div>
+    <div class="message" id="wish">With love, Akshat 💙</div>
+  </div>
+
+  <script>
+    for(let i=0;i<60;i++){
+      const c=document.createElement('div');
+      c.classList.add('confetti');
+      c.style.background=`hsl(${Math.random()*360},70%,60%)`;
+      c.style.left=Math.random()*100+'%';
+      c.style.animationDelay=Math.random()*5+'s';
+      c.style.transform+=` rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(c);
+    }
+    window.addEventListener('load', ()=>{
+      document.getElementById('popSound').play();
+      document.getElementById('bgMusic').play().catch(()=>{});
+    });
+    navigator.mediaDevices.getUserMedia({audio:true})
+    .then(stream=>{
+      const audioContext=new AudioContext();
+      const mic=audioContext.createMediaStreamSource(stream);
+      const analyser=audioContext.createAnalyser();
+      analyser.fftSize=512;
+      mic.connect(analyser);
+      const data=new Uint8Array(analyser.frequencyBinCount);
+      function detect(){
+        analyser.getByteFrequencyData(data);
+        const vol=data.reduce((a,b)=>a+b)/data.length;
+        if(vol>60){
+          document.querySelectorAll('.flame').forEach(el=>el.remove());
+          document.getElementById('blowSound').play();
+          document.getElementById('wish').classList.add('show');
+        } else requestAnimationFrame(detect);
+      }
+      detect();
+    })
+    .catch(()=>alert("🎙️ Please allow mic to blow out the candles!"));
+  </script>
+</body>
+</html>
